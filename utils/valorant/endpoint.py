@@ -4,6 +4,7 @@ from __future__ import annotations
 
 # Standard
 import json
+import logging
 from typing import Any
 
 import requests
@@ -81,9 +82,13 @@ class API_ENDPOINT:
 
         r = requests.get(f'{endpoint_url}{endpoint}', headers=self.headers)
 
+        if r.status_code != 200:
+            logging.error(f"Request failed with status code {r.status_code}: {r.text}")
+
         try:  # noqa: SIM105
             data = json.loads(r.text)
-        except Exception:
+        except Exception as e:
+            logging.error(f"Error parsing JSON response: {e}")
             pass
 
         if 'httpStatus' not in data:  # type: ignore
@@ -91,6 +96,7 @@ class API_ENDPOINT:
 
         if r.status_code == 400:
             response = LocalErrorResponse('AUTH', self.locale_code)
+            logging.error(f"Response error: {response.get('COOKIES_EXPIRED')}")
             raise ResponseError(response.get('COOKIES_EXPIRED'))
             # await self.refresh_token()
             # return await self.fetch(endpoint=endpoint, url=url, errors=errors)
@@ -110,9 +116,18 @@ class API_ENDPOINT:
         endpoint_url = getattr(self, url)
 
         r = requests.put(f'{endpoint_url}{endpoint}', headers=self.headers, data=data)
-        data = json.loads(r.text)
+
+        if r.status_code != 200:
+            logging.error(f"Request failed with status code {r.status_code}: {r.text}")
+
+        try:
+            data = json.loads(r.text)
+        except Exception as e:
+            logging.error(f"Error parsing JSON response: {e}")
+            raise ResponseError(self.response.get('REQUEST_FAILED'))
 
         if data is None:
+            logging.error("Request failed with no data returned")
             raise ResponseError(self.response.get('REQUEST_FAILED'))
 
         return data
