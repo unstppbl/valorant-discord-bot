@@ -81,6 +81,7 @@ class API_ENDPOINT:
         data = None
 
         r = requests.get(f'{endpoint_url}{endpoint}', headers=self.headers)
+        logging.info(f"Request URL: {r.request.url}")
 
         if r.status_code != 200:
             logging.error(f"Request failed with status code {r.status_code}: {r.text}")
