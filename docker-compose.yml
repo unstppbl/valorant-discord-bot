@@ -1,0 +1,8 @@
+services:
+  bot:
+    image: valorant-bot
+    container_name: valorant-discord-bot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data
